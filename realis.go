@@ -88,7 +88,7 @@ type RealisConfig struct {
 	timeoutms                   int
 	binTransport, jsonTransport bool
 	cluster                     *Cluster
-	backoff                     *Backoff
+	backoff                     Backoff
 	transport                   thrift.TTransport
 	protoFactory                thrift.TProtocolFactory
 	logger                      Logger
@@ -139,7 +139,7 @@ func ZKUrl(url string) ClientOption {
 	}
 }
 
-func Retries(backoff *Backoff) ClientOption {
+func Retries(backoff Backoff) ClientOption {
 	return func(config *RealisConfig) {
 		config.backoff = backoff
 	}
@@ -157,7 +157,7 @@ func ThriftBinary() ClientOption {
 	}
 }
 
-func BackOff(b *Backoff) ClientOption {
+func BackOff(b Backoff) ClientOption {
 	return func(config *RealisConfig) {
 		config.backoff = b
 	}
@@ -218,7 +218,7 @@ func NewRealisClient(options ...ClientOption) (Realis, error) {
 
 	// Default configs
 	config.timeoutms = 10000
-	config.backoff = &defaultBackoff
+	config.backoff = defaultBackoff
 	config.logger = NoopLogger{}
 	config.options = options
 
@@ -568,14 +568,14 @@ func (r *realisClient) CreateService(auroraJob Job, settings *aurora.JobUpdateSe
 
 	resp, err := r.StartJobUpdate(update, "")
 	if err != nil {
-		return resp, nil, errors.Wrap(err, "unable to create service")
+		return nil, nil, errors.Wrap(err, "unable to create service")
 	}
 
 	if resp != nil && resp.GetResult_() != nil {
 		return resp, resp.GetResult_().GetStartJobUpdateResult_(), nil
 	}
 
-	return resp, nil, errors.New("results object is nil")
+	return nil, nil, errors.New("results object is nil")
 }
 
 func (r *realisClient) ScheduleCronJob(auroraJob Job) (*aurora.Response, error) {
