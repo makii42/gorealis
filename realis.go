@@ -82,7 +82,7 @@ type realisClient struct {
 	adminClient    *aurora.AuroraAdminClient
 	infoLogger     Logger
 	debugLogger    Logger
-	lock           sync.Mutex
+	lock           *sync.Mutex
 }
 
 type RealisConfig struct {
@@ -94,8 +94,7 @@ type RealisConfig struct {
 	backoff                     Backoff
 	transport                   thrift.TTransport
 	protoFactory                thrift.TProtocolFactory
-	infoLogger                  Logger
-	debugLogger                 Logger
+	infoLogger, debugLogger     Logger
 	InsecureSkipVerify          bool
 	certspath                   string
 	clientkey, clientcert       string
@@ -294,7 +293,8 @@ func NewRealisClient(options ...ClientOption) (Realis, error) {
 		readonlyClient: aurora.NewReadOnlySchedulerClientFactory(config.transport, config.protoFactory),
 		adminClient:    aurora.NewAuroraAdminClientFactory(config.transport, config.protoFactory),
 		infoLogger:     config.infoLogger,
-		debugLogger:    config.debugLogger}, nil
+		debugLogger:    config.debugLogger,
+		lock:           &sync.Mutex{}}, nil
 }
 
 func GetDefaultClusterFromZKUrl(zkurl string) *Cluster {
